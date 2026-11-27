@@ -17,8 +17,14 @@ import { buildDossier } from './vendor/makefun-game.ts';
 const here = fileURLToPath(new URL('.', import.meta.url));
 const out = process.env.MAKEFUN_OUTPUT_DIR ?? '/output';
 
-rmSync(out, { recursive: true, force: true });
 mkdirSync(out, { recursive: true });
+// Empty the output directory's CONTENTS only, one entry at a time. The
+// output directory itself is never removed: in the grader it is a folder
+// mounted by the judge, and removing the mounted folder itself fails with
+// "device or resource busy" and aborts the run with exit code 1.
+for (const entry of readdirSync(out)) {
+  rmSync(join(out, entry), { recursive: true, force: true });
+}
 cpSync(join(here, 'game'), join(out, 'game'), { recursive: true });
 mkdirSync(join(out, 'screenshots'), { recursive: true });
 if (existsSync(join(here, 'screenshots'))) cpSync(join(here, 'screenshots'), join(out, 'screenshots'), { recursive: true });
